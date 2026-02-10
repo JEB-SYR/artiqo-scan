@@ -1,0 +1,395 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #f4f4f4;
+  --bg-light: #ffffff;
+  --accent: #c30a2a;
+  --accent-dim: #9c2224;
+  --text: #333333;
+  --text-dim: #939393;
+  --danger: #c30a2a;
+  --card: #ffffff;
+  --border: #dbdbdb;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+html, body, #root {
+  height: 100%;
+  overscroll-behavior-y: contain;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: var(--safe-top);
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-light);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.app-logo {
+  height: 28px;
+  width: auto;
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+/* Sync Status */
+.sync-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.online-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.online-indicator.online {
+  background: #22aa4422;
+  color: #22aa44;
+}
+
+.online-indicator.offline {
+  background: #c30a2a18;
+  color: var(--danger);
+}
+
+.sync-button {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+}
+
+.sync-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sync-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--danger);
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Content */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scanner */
+.scanner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+}
+
+.qr-reader {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#qr-reader video {
+  border-radius: 12px;
+}
+
+#qr-reader__scan_region {
+  min-height: 300px;
+}
+
+#qr-reader__dashboard {
+  display: none !important;
+}
+
+.scan-error {
+  margin-top: 16px;
+  padding: 12px;
+  background: #c30a2a12;
+  color: var(--danger);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.scan-loading {
+  margin-top: 40px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.last-scan {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  border-left: 3px solid var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.last-scan-success {
+  background: #e8f9ee;
+  border-color: #22aa44;
+  border-left-color: #22aa44;
+}
+
+.last-scan-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.last-scan-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.last-scan-success .last-scan-label {
+  color: #1a8a38;
+  font-weight: 600;
+}
+
+.last-scan-content {
+  font-size: 15px;
+  word-break: break-all;
+  margin-bottom: 4px;
+}
+
+.last-scan-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+}
+
+.last-scan-type {
+  color: var(--accent);
+}
+
+.last-scan-time {
+  color: var(--text-dim);
+}
+
+.last-scan-next {
+  background: #22aa44;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Scan List */
+.scan-list {
+  padding: 8px 16px;
+}
+
+.empty-list {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 60px 20px;
+  font-size: 15px;
+}
+
+.scan-item {
+  display: flex;
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.scan-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.scan-item-content {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.scan-item-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.scan-item-type {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.scan-item-sync.synced {
+  color: #22aa44;
+}
+
+.scan-item-sync.unsynced {
+  color: var(--danger);
+}
+
+.scan-item-delete {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  padding: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.scan-item-delete:hover {
+  color: var(--danger);
+}
+
+/* Settings */
+.settings {
+  padding: 20px 16px;
+}
+
+.settings-group {
+  margin-bottom: 24px;
+}
+
+.settings-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.settings-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+}
+
+.settings-input:focus {
+  border-color: var(--accent);
+}
+
+.settings-save {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.settings-info {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Tab Bar */
+.tab-bar {
+  display: flex;
+  background: var(--bg-light);
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.tab.active {
+  color: var(--accent);
+}
+
+.tab-icon {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
