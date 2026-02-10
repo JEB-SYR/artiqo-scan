@@ -166,6 +166,60 @@ body {
   display: none !important;
 }
 
+/* Scanner Viewport (Kamera + Torch) */
+.scanner-viewport {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+}
+
+.torch-button {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.torch-button.torch-on {
+  background: #f5c518;
+  color: #333;
+}
+
+.torch-icon {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+@media (min-width: 768px) {
+  .scanner-viewport {
+    max-width: 700px;
+  }
+
+  .torch-button {
+    width: 50px;
+    height: 50px;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .torch-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
 .scan-error {
   margin-top: 16px;
   padding: 12px;

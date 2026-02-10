@@ -23,11 +23,8 @@ const SUPPORTED_FORMATS = [
 // GS1-128 erkennen: beginnt mit FNC1 (]C1) oder enthält GS1 Application Identifiers
 function detectGS1128(content, formatName) {
   if (formatName !== "CODE_128") return formatName;
-  // FNC1 prefix (vom Scanner als ]C1 oder ASCII GS 29 übermittelt)
   if (content.startsWith("]C1") || content.startsWith("\x1d")) return "GS1_128";
-  // Typische AI-Muster: (01), (10), (17), (21), (310x) etc.
   if (/^\(?\d{2,4}\)/.test(content)) return "GS1_128";
-  // Rohformat ohne Klammern: beginnt mit 01, 02, 10, 17, 21 + plausible Länge
   if (/^(01\d{14}|02\d{14}|10[A-Za-z0-9]{1,20}|17\d{6}|21[A-Za-z0-9]{1,20})/.test(content)) return "GS1_128";
   return formatName;
 }
@@ -63,9 +60,7 @@ function calcScanBox() {
   const w = window.innerWidth;
   const h = window.innerHeight;
   const isLandscape = w > h;
-  // Use 85% of screen width, but cap at reasonable max
   const boxWidth = Math.min(Math.floor(w * 0.85), 600);
-  // Landscape: flatter box for barcodes; Portrait: still wider than tall
   const boxHeight = isLandscape
     ? Math.min(Math.floor(h * 0.4), 200)
     : Math.min(Math.floor(boxWidth * 0.45), 250);
@@ -80,11 +75,28 @@ export default function Scanner({ online, onScanComplete }) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [scanning, setScanning] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchAvailable, setTorchAvailable] = useState(false);
 
   const handleNextScan = useCallback(() => {
     setShowSuccess(false);
     setLastResult(null);
   }, []);
+
+  const toggleTorch = useCallback(async () => {
+    if (!html5QrRef.current) return;
+    try {
+      const track = html5QrRef.current
+        .getRunningTrackCameraCapabilities?.()
+        ?.track;
+      if (!track) return;
+      const newState = !torchOn;
+      await track.applyConstraints({ advanced: [{ torch: newState }] });
+      setTorchOn(newState);
+    } catch {
+      // Torch not supported on this device
+    }
+  }, [torchOn]);
 
   const handleScan = useCallback(
     async (decodedText, decodedResult) => {
@@ -142,16 +154,33 @@ export default function Scanner({ online, onScanComplete }) {
         await html5Qr.start(
           { facingMode: "environment" },
           {
-            fps: 10,
+            fps: 15,
             qrbox: calcScanBox(),
             formatsToSupport: SUPPORTED_FORMATS,
+            videoConstraints: {
+              facingMode: "environment",
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true,
+            },
           },
           handleScan,
-          () => {} // ignore errors during scanning
+          () => {}
         );
         if (mounted) {
           setScanning(true);
           setError(null);
+          // Prüfen ob Taschenlampe verfügbar
+          try {
+            const caps = html5Qr.getRunningTrackCameraCapabilities?.();
+            if (caps?.torchFeature?.().isSupported?.()) {
+              setTorchAvailable(true);
+            }
+          } catch {
+            // torch check failed, ignore
+          }
         }
       } catch (err) {
         if (mounted) setError("Kamera-Zugriff nicht möglich: " + err.message);
@@ -168,6 +197,7 @@ export default function Scanner({ online, onScanComplete }) {
         }
         html5QrRef.current = null;
       }
+      setTorchOn(false);
     }
 
     startScanner();
@@ -192,7 +222,20 @@ export default function Scanner({ online, onScanComplete }) {
 
   return (
     <div className="scanner-container">
-      <div id="qr-reader" ref={scannerRef} className="qr-reader" />
+      <div className="scanner-viewport">
+        <div id="qr-reader" ref={scannerRef} className="qr-reader" />
+        {scanning && torchAvailable && (
+          <button
+            className={`torch-button ${torchOn ? "torch-on" : ""}`}
+            onClick={toggleTorch}
+            aria-label="Taschenlampe"
+          >
+            <svg viewBox="0 0 24 24" className="torch-icon">
+              <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z" />
+            </svg>
+          </button>
+        )}
+      </div>
       {error && <div className="scan-error">{error}</div>}
       {!scanning && !error && <div className="scan-loading">Kamera wird gestartet...</div>}
       {lastResult && (
