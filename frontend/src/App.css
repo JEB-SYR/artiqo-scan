@@ -133,19 +133,173 @@ body {
   padding: 16px;
 }
 
-.qr-reader {
+/* Scanner Viewport (Kamera + Overlay + Buttons) */
+.scanner-viewport {
+  position: relative;
   width: 100%;
   max-width: 600px;
   border-radius: 12px;
   overflow: hidden;
+  background: #000;
 }
 
-#qr-reader video {
+/* Kompaktes Scanner-Fenster (kleiner) */
+.scanner-viewport-compact {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  max-height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.scanner-viewport-compact .scanner-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-height: 250px;
   border-radius: 12px;
 }
 
-#qr-reader__scan_region {
-  min-height: 250px;
+.scanner-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+/* Scan-Linie Overlay (wie Laser-Scanner) */
+.scan-line-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.scan-line-dark-top,
+.scan-line-dark-bottom {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.scan-line-strip {
+  height: 8%;
+  min-height: 40px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.scan-line {
+  width: 100%;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 8px 2px rgba(195, 10, 42, 0.6);
+}
+
+/* Quadrat-Overlay für DataMatrix */
+.scan-square-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  padding-bottom: 60%;
+  transform: translate(-50%, -50%);
+  border: 1.5px dashed rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Zoom-Slider */
+.zoom-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 600px;
+  padding: 8px 0;
+}
+
+.zoom-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.zoom-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  min-width: 30px;
+  text-align: center;
+}
+
+/* Torch oben rechts */
+.torch-button-top {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s;
+}
+
+.torch-button-top.torch-on {
+  background: #f5c518;
+  color: #333;
+}
+
+/* Scannen-Button */
+.capture-button {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #ffffff;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 10;
+  letter-spacing: 0.3px;
+}
+
+.capture-button:active {
+  transform: translateX(-50%) scale(0.92);
+}
+
+.capture-processing {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 @media (orientation: landscape) {
@@ -153,30 +307,17 @@ body {
     padding: 8px 16px;
   }
 
-  .qr-reader {
+  .scanner-viewport {
     max-width: 90vw;
   }
 
-  #qr-reader__scan_region {
-    min-height: 180px;
+  .scan-line-strip {
+    height: 10%;
+    min-height: 30px;
   }
 }
 
-#qr-reader__dashboard {
-  display: none !important;
-}
-
-/* Scanner Viewport (Kamera + Torch) */
-.scanner-viewport {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-}
-
 .torch-button {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -187,7 +328,6 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
   transition: background 0.2s;
 }
 
@@ -210,8 +350,6 @@ body {
   .torch-button {
     width: 50px;
     height: 50px;
-    bottom: 16px;
-    right: 16px;
   }
 
   .torch-icon {
@@ -251,6 +389,18 @@ body {
   transition: background 0.3s, border-color 0.3s;
 }
 
+.last-scan-pending {
+  background: #fff8e8;
+  border-color: #e6a817;
+  border-left-color: #e6a817;
+}
+
+.last-scan-pending .last-scan-label {
+  color: #b8860b;
+  font-weight: 600;
+  font-size: 13px;
+}
+
 .last-scan-success {
   background: #e8f9ee;
   border-color: #22aa44;
@@ -279,6 +429,14 @@ body {
   margin-bottom: 4px;
 }
 
+.last-scan-raw {
+  font-size: 10px;
+  color: #999;
+  word-break: break-all;
+  margin-bottom: 4px;
+  font-family: monospace;
+}
+
 .last-scan-meta {
   display: flex;
   gap: 10px;
@@ -291,6 +449,101 @@ body {
 
 .last-scan-time {
   color: var(--text-dim);
+}
+
+.scan-edit-field {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #d4a017;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 15px;
+  font-family: monospace;
+  color: var(--text);
+  resize: none;
+  margin-bottom: 6px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.scan-edit-field:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.gs1-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.gs1-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gs1-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.gs1-input {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #d4a017;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 15px;
+  font-family: monospace;
+  color: var(--text);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.gs1-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.pending-scan-wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 16px;
+}
+
+.scan-action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.scan-save-button {
+  flex: 1;
+  background: #22aa44;
+  color: #ffffff;
+  border: none;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.scan-discard-button {
+  flex: 1;
+  background: var(--danger);
+  color: #ffffff;
+  border: none;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .last-scan-next {

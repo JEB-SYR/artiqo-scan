@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>artiqo scan - Test-Barcodes</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #fff; }
+  h1 { color: #c30a2a; }
+  .barcode { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
+  .barcode h3 { margin: 0 0 5px; }
+  .barcode p { color: #666; font-size: 13px; margin: 0 0 15px; }
+  .barcode svg { display: block; margin: 0 auto; }
+  .barcode code { display: block; margin-top: 10px; font-size: 12px; color: #999; }
+</style>
+</head>
+<body>
+<h1>Test-Barcodes für artiqo scan</h1>
+<p>Diese Seite auf einem Computerbildschirm öffnen und mit dem iPhone/iPad scannen.</p>
+
+<div class="barcode">
+  <h3>EAN-13</h3>
+  <p>Standard-Produktbarcode</p>
+  <svg id="ean13"></svg>
+  <code>4048413701455</code>
+</div>
+
+<div class="barcode">
+  <h3>CODE-128</h3>
+  <p>Alphanumerischer Barcode</p>
+  <svg id="code128"></svg>
+  <code>ABC-12345-XYZ</code>
+</div>
+
+<div class="barcode">
+  <h3>GS1-128 (Beispiel 1)</h3>
+  <p>GTIN + Verfallsdatum + Charge</p>
+  <svg id="gs1a"></svg>
+  <code>(01)04048413701455(17)260315(10)BATCH01</code>
+</div>
+
+<div class="barcode">
+  <h3>GS1-128 (Beispiel 2)</h3>
+  <p>GTIN + Seriennummer</p>
+  <svg id="gs1b"></svg>
+  <code>(01)09501101530003(21)SN12345ABC</code>
+</div>
+
+<div class="barcode">
+  <h3>QR-Code</h3>
+  <p>Test-URL</p>
+  <div id="qr" style="display:inline-block"></div>
+  <code>https://artiqo.deusnet.de</code>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+// EAN-13
+JsBarcode("#ean13", "4048413701455", { format: "EAN13", width: 2, height: 80, fontSize: 14 });
+
+// CODE-128
+JsBarcode("#code128", "ABC-12345-XYZ", { format: "CODE128", width: 2, height: 80, fontSize: 14 });
+
+// GS1-128: FNC1 wird bei CODE128C als Prefix genutzt
+// Für Kamera-Scanning reicht CODE128-Darstellung mit AI-Klammern
+JsBarcode("#gs1a", "(01)04048413701455(17)260315(10)BATCH01", { format: "CODE128", width: 1.5, height: 80, fontSize: 11 });
+
+JsBarcode("#gs1b", "(01)09501101530003(21)SN12345ABC", { format: "CODE128", width: 1.5, height: 80, fontSize: 11 });
+
+// QR Code
+var qr = qrcode(0, 'M');
+qr.addData('https://artiqo.deusnet.de');
+qr.make();
+document.getElementById('qr').innerHTML = qr.createSvgTag(6, 0);
+</script>
+</body>
+</html>

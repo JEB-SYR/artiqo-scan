@@ -30,6 +30,8 @@ class ScanOut(BaseModel):
     device_name: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    plz: Optional[str] = None
+    ort: Optional[str] = None
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
     created_at: Optional[datetime] = None

@@ -1,10 +1,29 @@
 import aiomysql
+import httpx
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import get_pool, close_pool
 from models import SyncRequest, SyncResponse, ScanOut
+
+
+async def reverse_geocode(lat: float, lon: float) -> tuple[str | None, str | None]:
+    """Nominatim Reverse Geocoding → (plz, ort)"""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(
+                "https://nominatim.openstreetmap.org/reverse",
+                params={"lat": lat, "lon": lon, "format": "json", "zoom": 16},
+                headers={"User-Agent": "artiqo-scan/1.0"},
+            )
+            resp.raise_for_status()
+            addr = resp.json().get("address", {})
+            plz = addr.get("postcode")
+            ort = addr.get("city") or addr.get("town") or addr.get("village") or addr.get("municipality")
+            return plz, ort
+    except Exception:
+        return None, None
 
 
 @asynccontextmanager
@@ -46,6 +65,7 @@ async def sync_scans(req: SyncRequest, request: Request):
 
     pool = await get_pool()
     synced = 0
+    geo_updates = []
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             for scan in req.scans:
@@ -66,9 +86,25 @@ async def sync_scans(req: SyncRequest, request: Request):
                             user_agent,
                         ),
                     )
-                    synced += cur.rowcount
+                    if cur.rowcount > 0:
+                        synced += 1
+                        if scan.latitude and scan.longitude:
+                            geo_updates.append((scan.id, scan.latitude, scan.longitude))
                 except Exception:
                     pass
+
+    # Reverse Geocoding im Hintergrund (blockiert nicht die Response)
+    if geo_updates:
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                for scan_id, lat, lon in geo_updates:
+                    plz, ort = await reverse_geocode(lat, lon)
+                    if plz or ort:
+                        await cur.execute(
+                            "UPDATE scans SET plz = %s, ort = %s WHERE id = %s",
+                            (plz, ort, scan_id),
+                        )
+
     return SyncResponse(synced=synced, message=f"{synced} scans synced")
 
 
