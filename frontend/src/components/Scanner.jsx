@@ -11,10 +11,26 @@ const SUPPORTED_FORMATS = [
   0,  // QR_CODE
   4,  // EAN_13
   3,  // EAN_8
-  9,  // CODE_128
+  9,  // CODE_128 (inkl. GS1-128)
   8,  // CODE_39
   11, // UPC_A
+  12, // UPC_E
+  13, // ITF (Interleaved 2 of 5)
+  10, // CODABAR
+  2,  // DATA_MATRIX
 ];
+
+// GS1-128 erkennen: beginnt mit FNC1 (]C1) oder enthält GS1 Application Identifiers
+function detectGS1128(content, formatName) {
+  if (formatName !== "CODE_128") return formatName;
+  // FNC1 prefix (vom Scanner als ]C1 oder ASCII GS 29 übermittelt)
+  if (content.startsWith("]C1") || content.startsWith("\x1d")) return "GS1_128";
+  // Typische AI-Muster: (01), (10), (17), (21), (310x) etc.
+  if (/^\(?\d{2,4}\)/.test(content)) return "GS1_128";
+  // Rohformat ohne Klammern: beginnt mit 01, 02, 10, 17, 21 + plausible Länge
+  if (/^(01\d{14}|02\d{14}|10[A-Za-z0-9]{1,20}|17\d{6}|21[A-Za-z0-9]{1,20})/.test(content)) return "GS1_128";
+  return formatName;
+}
 
 // Beep via Web Audio API
 function playBeep() {
@@ -43,6 +59,19 @@ function formatTime(isoString) {
   });
 }
 
+function calcScanBox() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const isLandscape = w > h;
+  // Use 85% of screen width, but cap at reasonable max
+  const boxWidth = Math.min(Math.floor(w * 0.85), 600);
+  // Landscape: flatter box for barcodes; Portrait: still wider than tall
+  const boxHeight = isLandscape
+    ? Math.min(Math.floor(h * 0.4), 200)
+    : Math.min(Math.floor(boxWidth * 0.45), 250);
+  return { width: boxWidth, height: boxHeight };
+}
+
 export default function Scanner({ online, onScanComplete }) {
   const scannerRef = useRef(null);
   const html5QrRef = useRef(null);
@@ -67,8 +96,8 @@ export default function Scanner({ online, onScanComplete }) {
       playBeep();
       if (navigator.vibrate) navigator.vibrate(100);
 
-      const codeType =
-        decodedResult?.result?.format?.formatName || "UNKNOWN";
+      const rawType = decodedResult?.result?.format?.formatName || "UNKNOWN";
+      const codeType = detectGS1128(decodedText, rawType);
       const position = await getPosition();
       const deviceName = (await getSetting("device_name")) || "iPhone";
 
@@ -114,7 +143,7 @@ export default function Scanner({ online, onScanComplete }) {
           { facingMode: "environment" },
           {
             fps: 10,
-            qrbox: { width: 250, height: 250 },
+            qrbox: calcScanBox(),
             formatsToSupport: SUPPORTED_FORMATS,
           },
           handleScan,
